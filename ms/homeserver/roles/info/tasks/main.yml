@@ -1,0 +1,107 @@
+---
+# Use raw module to check and install Python (doesn't require Python on target)
+- name: Check Python version
+  ansible.builtin.raw: python3 --version || echo "Python not found"
+  register: python_version
+  changed_when: false
+  tags: [info, python]
+
+- name: Debug Python version
+  ansible.builtin.debug:
+    msg: "Python version: {{ python_version.stdout }}"
+  tags: [info, python]
+
+- name: Install Python 3 if needed (openSUSE/SLES)
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      zypper --non-interactive refresh
+      zypper --non-interactive install python3 python3-base python3-xml python3-setuptools
+    fi
+  register: python_install_suse
+  changed_when: "'Installing: python3' in python_install_suse.stdout"
+  become: true
+  when: 
+    - "'Python not found' in python_version.stdout"
+    - ansible_os_family == "Suse"
+  tags: [info, python, install]
+
+- name: Install Python 3 if needed (Debian/Ubuntu)
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      apt-get update
+      apt-get install -y python3 python3-distutils python3-apt
+    fi
+  register: python_install_debian
+  changed_when: "'Setting up python3' in python_install_debian.stdout"
+  become: true
+  when: 
+    - "'Python not found' in python_version.stdout"
+    - ansible_os_family == "Debian"
+  tags: [info, python, install]
+
+# Explicitly set the Python interpreter
+- name: Set Python interpreter
+  ansible.builtin.set_fact:
+    ansible_python_interpreter: "/usr/bin/python3"
+  when: ansible_python_interpreter is not defined
+  tags: [info, python]
+
+# Show the actual user
+- name: Get current user
+  ansible.builtin.command: whoami
+  register: current_user
+  changed_when: false
+  tags: [info, user]
+
+- name: Display current user
+  ansible.builtin.debug:
+    msg: "Current user is: {{ current_user.stdout }}"
+  tags: [info, user]
+
+- name: Distribution
+  ansible.builtin.debug:
+    msg: "Distribution: {{ ansible_distribution }}"
+  when: info_show_distribution | bool
+  tags: [info, system]
+
+- name: Distribution Version
+  ansible.builtin.debug:
+    msg: "Distribution Version: {{ ansible_distribution_major_version }}"
+  when: info_show_version | bool
+  tags: [info, system]
+
+- name: Distribution Release Name
+  ansible.builtin.debug:
+    msg: "Distribution Release: {{ ansible_distribution_release }}"
+  when: info_show_release | bool
+  tags: [info, system]
+
+- name: Platzbedarf der Root-Partition ermitteln
+  ansible.builtin.debug:
+    msg: "Root Partition Info: {{ ansible_mounts | selectattr('mount', 'equalto', '/') | list }}"
+  when: info_show_root_partition | bool
+  tags: [info, storage]
+
+- name: IPv4 adresse
+  ansible.builtin.debug:
+    msg: "IPv4 Address: {{ ansible_default_ipv4.address }}"
+  when: info_show_ipv4 | bool
+  tags: [info, network]
+
+- name: System Summary
+  ansible.builtin.debug:
+    msg: |
+      ===== SYSTEM INFORMATION SUMMARY =====
+      Hostname: {{ ansible_hostname }}
+      Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}
+      Release: {{ ansible_distribution_release }}
+      Kernel: {{ ansible_kernel }}
+      Architecture: {{ ansible_architecture }}
+      Current User: {{ current_user.stdout }}
+      Python: {{ python_version.stdout }}
+      IPv4: {{ ansible_default_ipv4.address }}
+      Memory: {{ ansible_memtotal_mb }}MB
+      CPU Cores: {{ ansible_processor_vcpus }}
+      =======================================
+  when: info_show_summary | bool
+  tags: [info, summary]

@@ -1,0 +1,12 @@
+---
+# Default variables for info role
+info_show_distribution: true
+info_show_version: true
+info_show_release: true
+info_show_root_partition: true
+info_show_ipv4: true
+info_show_summary: true
+
+# Python installation settings
+info_auto_install_python: true
+info_python_interpreter: "/usr/bin/python3"

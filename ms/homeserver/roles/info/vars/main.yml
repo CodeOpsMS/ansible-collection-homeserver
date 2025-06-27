@@ -1,0 +1,4 @@
+---
+# Variables for info role
+info_role_version: "1.0.0"
+info_role_name: "System Information"

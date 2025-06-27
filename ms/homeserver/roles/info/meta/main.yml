@@ -1,0 +1,28 @@
+---
+galaxy_info:
+  author: MS
+  description: System information collection role with Python auto-installation
+  company: HomeServer
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+    - name: opensuse
+      versions:
+        - 15.4
+        - 15.5
+  galaxy_tags:
+    - system
+    - info
+    - monitoring
+    - python
+    - infrastructure
+
+dependencies: []
