@@ -48,8 +48,30 @@ jobs:
     needs: lint
     strategy:
       matrix:
-        ansible-version: ['>=2.15.0', '>=2.16.0', '>=2.17.0']
-        python-version: ['3.9', '3.10', '3.11', '3.12']
+        include:
+          # Ansible 2.15 supports Python 3.9+
+          - ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.9'
+          - ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.10'
+          - ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.11'
+          - ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.12'
+          # Ansible 2.16 requires Python 3.10+
+          - ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.10'
+          - ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.11'
+          - ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.12'
+          # Ansible 2.17 requires Python 3.10+
+          - ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.10'
+          - ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.11'
+          - ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.12'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

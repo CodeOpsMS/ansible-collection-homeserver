@@ -52,8 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical Details
 - **Supported Distributions**: Ubuntu (18.04+), Debian (9+), openSUSE (Leap 15+), RedHat/CentOS/Rocky (7+), Alpine (3.12+)
-- **Python Versions**: 3.9, 3.10, 3.11, 3.12
-- **Ansible Versions**: 2.15, 2.16, 2.17
+- **Python Versions**: 3.9 (Ansible 2.15), 3.10+ (Ansible 2.16+)
+- **Ansible Versions**: 2.15 (Python 3.9+), 2.16 (Python 3.10+), 2.17 (Python 3.10+)
 - **CI/CD Features**: Lint, test, build, security scan, and automated Galaxy publishing
 
 ## [1.0.0] - 2025-01-16

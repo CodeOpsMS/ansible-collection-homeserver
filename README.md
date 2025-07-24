@@ -13,7 +13,7 @@ A comprehensive Ansible Collection for homeserver management, system information
 - **🐧 Multi-Platform**: Support for Ubuntu, Debian, openSUSE, RedHat/CentOS/Rocky, and Alpine Linux
 - **🛡️ Robust**: Defensive programming with comprehensive error handling and graceful fallbacks
 - **🔒 Secure**: No hardcoded credentials, minimal privileges, regular security scanning
-- **🧪 Tested**: Extensive CI/CD with matrix testing across Python 3.9-3.12 and Ansible 2.15-2.17
+- **🧪 Tested**: Extensive CI/CD with matrix testing across Python 3.9-3.12 and Ansible 2.15-2.17 (Python 3.10+ required for Ansible 2.16+)
 - **📚 Documented**: Comprehensive documentation and examples
 
 ## 📦 Installation
@@ -109,7 +109,7 @@ Collects comprehensive system information from your homeserver with automatic Py
 
 ### Ansible Environment
 - **Ansible**: >= 2.15 (tested up to 2.17)
-- **Python**: >= 3.9 (tested up to 3.12)
+- **Python**: >= 3.9 for Ansible 2.15, >= 3.10 for Ansible 2.16+
 - **Collections**: 
   - `ansible.posix`
   - `community.general`

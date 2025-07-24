@@ -1,4 +1,8 @@
 # Makefile for ms.homeserver Ansible Collection
+# 
+# Python Version Requirements:
+# - Ansible 2.15: Python 3.9+
+# - Ansible 2.16+: Python 3.10+
 
 .PHONY: help build test lint clean install check-syntax validate ci-local
 
@@ -11,11 +15,16 @@ help:
 	@echo "  yamllint     - Run yamllint"
 	@echo "  clean        - Clean build artifacts"
 	@echo "  install      - Install collection locally"
+	@echo "  install-deps - Install development dependencies"
 	@echo "  check-syntax - Check YAML syntax"
 	@echo "  validate     - Validate collection structure"
 	@echo "  all          - Run all checks (lint, syntax, test)"
 	@echo "  ci-local     - Run CI pipeline locally"
 	@echo "  release      - Prepare for release"
+	@echo ""
+	@echo "Python/Ansible compatibility:"
+	@echo "  Ansible 2.15: Python 3.9+"
+	@echo "  Ansible 2.16+: Python 3.10+"
 
 # Variables
 COLLECTION_NAME = ms-homeserver
@@ -75,10 +84,14 @@ ci-local: clean yamllint lint check-syntax validate build test
 	@echo "Local CI pipeline completed successfully!"
 
 # Development setup
-dev-setup:
+install-deps:
 	@echo "Setting up development environment..."
+	@echo "Note: For Ansible 2.16+, Python 3.10+ is required"
 	pip install ansible-lint yamllint
 	ansible-galaxy collection install ansible.posix community.general
+
+# Development setup (alias)
+dev-setup: install-deps
 
 # Format YAML files
 format:
