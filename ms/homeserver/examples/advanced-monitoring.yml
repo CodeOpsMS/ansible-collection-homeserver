@@ -1,0 +1,22 @@
+---
+# Advanced system monitoring with custom configuration
+- name: Advanced system monitoring
+  hosts: homeservers
+  gather_facts: true
+  vars:
+    info_show_summary: true
+    info_show_uptime: true
+    info_show_disk_space: true
+    info_show_selinux: true
+    info_auto_install_python: true
+  roles:
+    - ms.homeserver.info
+
+  post_tasks:
+    - name: Create system report
+      ansible.builtin.template:
+        src: system_report.j2
+        dest: "/tmp/{{ ansible_hostname }}_report.txt"
+      delegate_to: localhost
+      vars:
+        report_timestamp: "{{ ansible_date_time.iso8601 }}"

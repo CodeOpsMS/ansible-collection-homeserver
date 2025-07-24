@@ -1,0 +1,28 @@
+---
+# Integration test for info role
+- name: Test ms.homeserver.info role
+  hosts: localhost
+  gather_facts: true
+  vars:
+    info_show_summary: true
+    info_auto_install_python: false  # Don't install Python in tests
+  roles:
+    - ms.homeserver.info
+
+  post_tasks:
+    - name: Verify system information was collected
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution is defined
+          - ansible_hostname is defined
+          - ansible_kernel is defined
+        fail_msg: "Basic system information not collected"
+        success_msg: "System information successfully collected"
+
+    - name: Verify Python version was checked
+      ansible.builtin.assert:
+        that:
+          - python_version is defined
+          - python_version.stdout is defined
+        fail_msg: "Python version not checked"
+        success_msg: "Python version successfully checked"

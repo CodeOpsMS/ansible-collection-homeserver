@@ -1,0 +1,14 @@
+---
+profile: production  # Changed from production to basic for more permissive linting
+
+# Exclude specific rules if needed
+skip_list:
+  - yaml[line-length]  # Allow longer lines for readability
+  - meta-runtime[unsupported-version]  # Allow older Ansible versions
+
+# Enable offline mode
+offline: false
+
+# Additional configuration
+use_default_rules: true
+verbosity: 1

@@ -1,10 +1,11 @@
+---
 namespace: ms
 name: homeserver
-version: 1.0.0
-description: Home server management collection for system information
+version: 1.1.0
+description: Home server management collection for system information and configuration
 readme: README.md
 authors:
-  - MS manischneider@icloud.com
+  - ms
 license:
   - MIT
 license_file: ''
@@ -15,10 +16,19 @@ tags:
   - automation
   - infrastructure
   - python
-dependencies: 
+  - monitoring
+  - linux
+dependencies:
   "ansible.posix": ">=1.0.0"
+  "community.general": ">=3.0.0"
 repository: https://github.com/yourusername/ansible-collection-homeserver
 documentation: https://github.com/yourusername/ansible-collection-homeserver
 homepage: https://github.com/yourusername/ansible-collection-homeserver
 issues: https://github.com/yourusername/ansible-collection-homeserver/issues
-build_ignore: []
+build_ignore:
+  - '*.tar.gz'
+  - '.git'
+  - '.gitignore'
+  - 'tests/'
+  - '*.pyc'
+  - '__pycache__'

@@ -1,0 +1,16 @@
+---
+# Network-only information gathering
+- name: Gather network information only
+  hosts: all
+  gather_facts: true
+  vars:
+    info_show_distribution: false
+    info_show_version: false
+    info_show_release: false
+    info_show_root_partition: false
+    info_show_summary: false
+    info_show_ipv4: true
+  roles:
+    - ms.homeserver.info
+  tags:
+    - network

@@ -1,0 +1,7 @@
+---
+# Simple system information gathering
+- name: Gather basic system information
+  hosts: all
+  gather_facts: true
+  roles:
+    - ms.homeserver.info

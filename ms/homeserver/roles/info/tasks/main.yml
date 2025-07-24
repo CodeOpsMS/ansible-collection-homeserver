@@ -20,9 +20,10 @@
   register: python_install_suse
   changed_when: "'Installing: python3' in python_install_suse.stdout"
   become: true
-  when: 
+  when:
     - "'Python not found' in python_version.stdout"
     - ansible_os_family == "Suse"
+    - info_auto_install_python | bool
   tags: [info, python, install]
 
 - name: Install Python 3 if needed (Debian/Ubuntu)
@@ -34,17 +35,54 @@
   register: python_install_debian
   changed_when: "'Setting up python3' in python_install_debian.stdout"
   become: true
-  when: 
+  when:
     - "'Python not found' in python_version.stdout"
     - ansible_os_family == "Debian"
+    - info_auto_install_python | bool
+  tags: [info, python, install]
+
+- name: Install Python 3 if needed (RedHat/CentOS/Rocky)
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      yum update -y || dnf update -y
+      yum install -y python3 python3-setuptools || dnf install -y python3 python3-setuptools
+    fi
+  register: python_install_redhat
+  changed_when: "'Installing' in python_install_redhat.stdout or 'Installed' in python_install_redhat.stdout"
+  become: true
+  when:
+    - "'Python not found' in python_version.stdout"
+    - ansible_os_family == "RedHat"
+    - info_auto_install_python | bool
+  tags: [info, python, install]
+
+- name: Install Python 3 if needed (Alpine)
+  ansible.builtin.raw: |
+    if ! command -v python3 &> /dev/null; then
+      apk update
+      apk add python3 py3-setuptools
+    fi
+  register: python_install_alpine
+  changed_when: "'Installing' in python_install_alpine.stdout"
+  become: true
+  when:
+    - "'Python not found' in python_version.stdout"
+    - ansible_os_family == "Alpine"
+    - info_auto_install_python | bool
   tags: [info, python, install]
 
 # Explicitly set the Python interpreter
 - name: Set Python interpreter
   ansible.builtin.set_fact:
-    ansible_python_interpreter: "/usr/bin/python3"
+    ansible_python_interpreter: "{{ info_python_interpreter }}"
   when: ansible_python_interpreter is not defined
   tags: [info, python]
+
+# Gather system facts if not already done
+- name: Gather system facts
+  ansible.builtin.setup:
+  when: ansible_distribution is not defined
+  tags: [info]
 
 # Show the actual user
 - name: Get current user
@@ -57,6 +95,24 @@
   ansible.builtin.debug:
     msg: "Current user is: {{ current_user.stdout }}"
   tags: [info, user]
+
+- name: Get system uptime
+  ansible.builtin.command: uptime -p
+  register: system_uptime
+  changed_when: false
+  failed_when: false
+  tags: [info, system]
+
+- name: Get available disk space
+  ansible.builtin.shell: |
+    set -o pipefail
+    df -h / | tail -1 | awk '{print $4}'
+  register: disk_space_available
+  changed_when: false
+  failed_when: false
+  args:
+    executable: /bin/bash
+  tags: [info, storage]
 
 - name: Distribution
   ansible.builtin.debug:
@@ -76,32 +132,44 @@
   when: info_show_release | bool
   tags: [info, system]
 
-- name: Platzbedarf der Root-Partition ermitteln
+- name: Show root partition information
   ansible.builtin.debug:
     msg: "Root Partition Info: {{ ansible_mounts | selectattr('mount', 'equalto', '/') | list }}"
-  when: info_show_root_partition | bool
+  when:
+    - info_show_root_partition | bool
+    - ansible_mounts is defined
   tags: [info, storage]
 
-- name: IPv4 adresse
+- name: Show IPv4 address
   ansible.builtin.debug:
     msg: "IPv4 Address: {{ ansible_default_ipv4.address }}"
-  when: info_show_ipv4 | bool
+  when:
+    - info_show_ipv4 | bool
+    - ansible_default_ipv4.address is defined
   tags: [info, network]
 
 - name: System Summary
   ansible.builtin.debug:
     msg: |
+      =======================================
       ===== SYSTEM INFORMATION SUMMARY =====
+      =======================================
       Hostname: {{ ansible_hostname }}
+      FQDN: {{ ansible_fqdn | default('N/A') }}
       Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}
       Release: {{ ansible_distribution_release }}
       Kernel: {{ ansible_kernel }}
       Architecture: {{ ansible_architecture }}
       Current User: {{ current_user.stdout }}
-      Python: {{ python_version.stdout }}
-      IPv4: {{ ansible_default_ipv4.address }}
-      Memory: {{ ansible_memtotal_mb }}MB
+      Python: {{ python_version.stdout | replace('\n', '') }}
+      Uptime: {{ system_uptime.stdout | default('N/A') }}
+      IPv4: {{ ansible_default_ipv4.address | default('N/A') }}
+      Memory Total: {{ ansible_memtotal_mb }}MB
+      Memory Free: {{ ansible_memfree_mb }}MB
       CPU Cores: {{ ansible_processor_vcpus }}
+      CPU Model: {{ ansible_processor[2] | default('N/A') }}
+      Disk Space Available: {{ disk_space_available.stdout | default('N/A') }}
+      SELinux Status: {{ ansible_selinux.status | default('N/A') }}
       =======================================
   when: info_show_summary | bool
   tags: [info, summary]

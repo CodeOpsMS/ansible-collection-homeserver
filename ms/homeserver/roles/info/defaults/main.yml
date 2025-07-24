@@ -6,7 +6,19 @@ info_show_release: true
 info_show_root_partition: true
 info_show_ipv4: true
 info_show_summary: true
+info_show_uptime: true
+info_show_disk_space: true
 
 # Python installation settings
 info_auto_install_python: true
 info_python_interpreter: "/usr/bin/python3"
+
+# Additional display options
+info_show_selinux: true
+info_show_fqdn: true
+info_show_memory_details: true
+info_show_cpu_details: true
+
+# Output formatting
+info_summary_width: 50
+info_use_colors: false

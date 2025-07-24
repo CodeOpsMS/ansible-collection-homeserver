@@ -1,0 +1,12 @@
+---
+# Handlers for info role
+- name: Restart systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  become: true
+
+- name: Update package cache
+  ansible.builtin.package:
+    update_cache: true
+  become: true
+  when: ansible_pkg_mgr in ['apt', 'yum', 'dnf', 'zypper']
