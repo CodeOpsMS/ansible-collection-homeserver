@@ -28,7 +28,7 @@ Add to your `requirements.yml`:
 ```yaml
 collections:
   - name: ms.homeserver
-    source: https://github.com/yourusername/ansible-collection-homeserver
+    source: https://github.com/codeopsms/ansible-collection-homeserver
     type: git
     version: main
 ```
@@ -173,6 +173,6 @@ This collection is licensed under the MIT License. See [LICENSE](LICENSE) for de
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/ansible-collection-homeserver/issues)
-- **Documentation**: [GitHub Wiki](https://github.com/yourusername/ansible-collection-homeserver/wiki)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/ansible-collection-homeserver/discussions)
+- **Issues**: [GitHub Issues](https://github.com/codeopsms/ansible-collection-homeserver/issues)
+- **Documentation**: [GitHub Wiki](https://github.com/codeopsms/ansible-collection-homeserver/wiki)
+- **Discussions**: [GitHub Discussions](https://github.com/codeopsms/ansible-collection-homeserver/discussions)

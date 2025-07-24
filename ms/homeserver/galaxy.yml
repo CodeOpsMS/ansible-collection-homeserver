@@ -21,10 +21,10 @@ tags:
 dependencies:
   "ansible.posix": ">=1.0.0"
   "community.general": ">=3.0.0"
-repository: https://github.com/yourusername/ansible-collection-homeserver
-documentation: https://github.com/yourusername/ansible-collection-homeserver
-homepage: https://github.com/yourusername/ansible-collection-homeserver
-issues: https://github.com/yourusername/ansible-collection-homeserver/issues
+repository: https://github.com/codeopsms/ansible-collection-homeserver
+documentation: https://github.com/codeopsms/ansible-collection-homeserver
+homepage: https://github.com/codeopsms/ansible-collection-homeserver
+issues: https://github.com/codeopsms/ansible-collection-homeserver/issues
 build_ignore:
   - '*.tar.gz'
   - '.git'
