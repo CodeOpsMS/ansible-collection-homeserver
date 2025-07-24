@@ -1,0 +1,29 @@
+---
+version: 2
+
+updates:
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "codeopsms"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+
+  # Python dependencies (if any)
+  - package-ecosystem: "pip"
+    directory: "/ms/homeserver"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "codeopsms"
+    commit-message:
+      prefix: "deps"
+      include: "scope"

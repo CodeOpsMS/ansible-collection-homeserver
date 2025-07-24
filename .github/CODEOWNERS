@@ -1,0 +1,24 @@
+# Global owners
+* @codeopsms
+
+# Collection specific
+/ms/homeserver/ @codeopsms
+
+# CI/CD workflows
+/.github/workflows/ @codeopsms
+
+# Documentation
+*.md @codeopsms
+/ms/homeserver/README.md @codeopsms
+/ms/homeserver/CHANGELOG.md @codeopsms
+
+# Configuration files
+/ms/homeserver/galaxy.yml @codeopsms
+/ms/homeserver/.ansible-lint @codeopsms
+/ms/homeserver/.yamllint @codeopsms
+
+# Role files
+/ms/homeserver/roles/ @codeopsms
+
+# Tests
+/ms/homeserver/tests/ @codeopsms

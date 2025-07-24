@@ -1,0 +1,170 @@
+---
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+env:
+  PYTHON_VERSION: "3.9"
+
+jobs:
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+          files: |
+            ms/homeserver/**/*.yml
+            ms/homeserver/**/*.yaml
+            ms/homeserver/**/*.py
+
+      - name: Comment PR with changes
+        if: steps.changed-files.outputs.any_changed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changedFiles = `${{ steps.changed-files.outputs.all_changed_files }}`.split(' ');
+            const body = `## 🔍 Changed Files in this PR
+            
+            The following Ansible Collection files have been modified:
+            
+            ${changedFiles.map(file => `- \`${file}\``).join('\n')}
+            
+            **Total files changed:** ${changedFiles.length}
+            
+            Please ensure all changes are properly tested and documented.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  lint-pr:
+    name: Lint PR Changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-lint yamllint ansible-core
+
+      - name: Run Ansible Lint on changed files
+        run: |
+          ansible-lint .
+        working-directory: ./ms/homeserver
+
+  test-pr:
+    name: Test PR Changes
+    runs-on: ubuntu-latest
+    needs: lint-pr
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core
+
+      - name: Install collection dependencies
+        run: |
+          ansible-galaxy collection install ansible.posix community.general
+        working-directory: ./ms/homeserver
+
+      - name: Build and test collection
+        run: |
+          make build
+          make test
+        working-directory: ./ms/homeserver
+
+      - name: Comment PR with test results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const success = '${{ job.status }}' === 'success';
+            const emoji = success ? '✅' : '❌';
+            const status = success ? 'passed' : 'failed';
+            
+            const body = `## ${emoji} Test Results
+            
+            Collection tests have **${status}**.
+            
+            ${success ? 'All tests passed successfully! 🎉' : 'Some tests failed. Please check the logs for details.'}
+            
+            **Workflow:** [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  size-check:
+    name: Collection Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core
+
+      - name: Build collection and check size
+        run: |
+          ansible-galaxy collection build --force
+          SIZE=$(du -h *.tar.gz | cut -f1)
+          echo "COLLECTION_SIZE=$SIZE" >> $GITHUB_ENV
+          echo "Collection size: $SIZE"
+        working-directory: ./ms/homeserver
+
+      - name: Comment on PR with size info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const size = process.env.COLLECTION_SIZE;
+            const body = `## 📦 Collection Build Information
+            
+            **Collection Size:** \`${size}\`
+            
+            The collection has been successfully built and is ready for testing.`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
