@@ -244,6 +244,7 @@ This project is licensed under the [MIT License](LICENSE) - see the LICENSE file
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/codeopsms/ansible-collection-homeserver/issues)
 - 💡 **Feature Requests**: [GitHub Discussions](https://github.com/codeopsms/ansible-collection-homeserver/discussions)
 - 📚 **Documentation**: [Project Wiki](https://github.com/codeopsms/ansible-collection-homeserver/wiki)
+- 🔒 **Security Scanning**: [Security Documentation](docs/SECURITY_SCANNING.md)
 - 🌟 **Ansible Galaxy**: [Collection Page](https://galaxy.ansible.com/ms/homeserver)
 
 ---
