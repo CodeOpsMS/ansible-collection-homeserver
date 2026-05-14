@@ -7,25 +7,93 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 env:
-  PYTHON_VERSION: "3.9"
+  PYTHON_VERSION: "3.12"
 
 jobs:
+  lint-test:
+    name: Lint Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible-core ansible-lint yamllint
+
+      - name: Run lint checks
+        run: |
+          make yamllint lint
+        working-directory: ./ms/homeserver
+
   comprehensive-test:
     name: Comprehensive Testing
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-20.04, ubuntu-22.04]
-        ansible-version: ['>=2.15.0', '>=2.16.0', '>=2.17.0']
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-        exclude:
-          # Exclude some combinations to reduce job count
-          - os: ubuntu-20.04
+        include:
+          # Keep the nightly matrix aligned with CI. ubuntu-20.04 is no longer
+          # maintained by GitHub-hosted runners and stayed queued indefinitely.
+          - os: ubuntu-latest
+            ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.9'
+          - os: ubuntu-latest
+            ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.10'
+          - os: ubuntu-latest
+            ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.11'
+          - os: ubuntu-latest
+            ansible-version: '>=2.15.0,<2.16.0'
+            python-version: '3.12'
+          - os: ubuntu-latest
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.10'
+          - os: ubuntu-latest
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.11'
+          - os: ubuntu-latest
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.12'
+          - os: ubuntu-latest
+            ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.10'
+          - os: ubuntu-latest
+            ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.11'
+          - os: ubuntu-latest
+            ansible-version: '>=2.17.0,<2.18.0'
             python-version: '3.12'
           - os: ubuntu-22.04
-            ansible-version: '>=2.15.0'
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.10'
+          - os: ubuntu-22.04
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.11'
+          - os: ubuntu-22.04
+            ansible-version: '>=2.16.0,<2.17.0'
+            python-version: '3.12'
+          - os: ubuntu-22.04
+            ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.10'
+          - os: ubuntu-22.04
+            ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.11'
+          - os: ubuntu-22.04
+            ansible-version: '>=2.17.0,<2.18.0'
+            python-version: '3.12'
 
     steps:
       - name: Checkout code
@@ -40,7 +108,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install "ansible-core${{ matrix.ansible-version }}"
-          pip install ansible-lint
 
       - name: Install system dependencies
         run: |
@@ -54,13 +121,11 @@ jobs:
 
       - name: Run comprehensive tests
         run: |
-          make all
+          make check-syntax validate test
         working-directory: ./ms/homeserver
 
       - name: Test collection installation
         run: |
-          ansible-galaxy collection build --force
-          ansible-galaxy collection install *.tar.gz --force
           ansible-doc ms.homeserver.info
         working-directory: ./ms/homeserver
 
@@ -79,7 +144,17 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ansible-core time
+          pip install ansible-core
+
+      - name: Install collection dependencies
+        run: |
+          ansible-galaxy collection install ansible.posix community.general
+        working-directory: ./ms/homeserver
+
+      - name: Install collection
+        run: |
+          make install
+        working-directory: ./ms/homeserver
 
       - name: Performance test
         run: |
@@ -91,9 +166,9 @@ jobs:
     name: Compatibility Testing
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target_os:
-          - ubuntu:20.04
           - ubuntu:22.04
           - debian:bullseye
           - debian:bookworm
@@ -108,55 +183,76 @@ jobs:
 
       - name: Test on ${{ matrix.target_os }}
         run: |
-          docker run --rm -v $(pwd):/workspace -w /workspace ${{ matrix.target_os }} \
-            sh -c "
+          docker run --rm -v "$(pwd):/workspace" -w /workspace ${{ matrix.target_os }} \
+            sh -eux -c '
             if command -v apt-get >/dev/null; then
-              apt-get update && apt-get install -y python3 python3-pip curl
+              apt-get update
+              apt-get install -y python3 python3-pip python3-venv curl make
+              PYTHON_BIN=python3
             elif command -v yum >/dev/null; then
-              yum update -y && yum install -y python3 python3-pip curl
+              yum update -y
+              yum install -y curl make
+              if yum install -y python39 python39-pip; then
+                PYTHON_BIN=python3.9
+              else
+                yum install -y python3 python3-pip
+                PYTHON_BIN=python3
+              fi
             elif command -v apk >/dev/null; then
-              apk update && apk add python3 py3-pip curl
+              apk update
+              apk add python3 py3-pip py3-virtualenv curl make
+              PYTHON_BIN=python3
             fi
-            pip3 install ansible-core || python3 -m pip install ansible-core
+
+            "$PYTHON_BIN" -m venv /tmp/ansible-venv
+            /tmp/ansible-venv/bin/python -m pip install --upgrade pip
+            /tmp/ansible-venv/bin/pip install "ansible-core>=2.15.0,<2.16.0"
+
             cd ms/homeserver
-            ansible-galaxy collection install ansible.posix community.general
-            ansible-playbook tests/integration.yml -v --connection=local --inventory=localhost,
-            "
+            /tmp/ansible-venv/bin/ansible-galaxy collection install ansible.posix community.general
+            /tmp/ansible-venv/bin/ansible-galaxy collection build --force
+            /tmp/ansible-venv/bin/ansible-galaxy collection install ./*.tar.gz --force
+            /tmp/ansible-venv/bin/ansible-playbook tests/integration.yml -v --connection=local --inventory=localhost,
+            '
 
   notify-results:
     name: Notify Results
     runs-on: ubuntu-latest
-    needs: [comprehensive-test, performance-test, compatibility-test]
+    needs: [lint-test, comprehensive-test, performance-test, compatibility-test]
     if: always()
     steps:
       - name: Check test results
         run: |
+          echo "Lint Tests: ${{ needs.lint-test.result }}"
           echo "Comprehensive Tests: ${{ needs.comprehensive-test.result }}"
           echo "Performance Tests: ${{ needs.performance-test.result }}"
           echo "Compatibility Tests: ${{ needs.compatibility-test.result }}"
 
       - name: Create issue on failure
-        if: contains(needs.*.result, 'failure')
+        if: >-
+          contains(needs.*.result, 'failure') ||
+          contains(needs.*.result, 'cancelled')
         uses: actions/github-script@v9
         with:
           script: |
             const title = `🚨 Nightly Tests Failed - ${new Date().toISOString().split('T')[0]}`;
             const body = `## Nightly Test Failure Report
-            
+
             **Date:** ${new Date().toISOString()}
             **Workflow:** [View Details](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            
+
             ### Test Results:
+            - **Lint Tests:** ${{ needs.lint-test.result }}
             - **Comprehensive Tests:** ${{ needs.comprehensive-test.result }}
             - **Performance Tests:** ${{ needs.performance-test.result }}
             - **Compatibility Tests:** ${{ needs.compatibility-test.result }}
-            
+
             Please investigate and fix the failing tests.
-            
+
             ---
             *This issue was automatically created by the nightly test workflow.*`;
-            
-            github.rest.issues.create({
+
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: title,

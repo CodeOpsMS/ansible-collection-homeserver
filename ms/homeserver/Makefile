@@ -48,7 +48,7 @@ lint:
 	ansible-lint .
 
 # Check YAML syntax
-check-syntax:
+check-syntax: install
 	@echo "Checking YAML syntax..."
 	find . -path "./tests/*.yml" -o -path "./examples/*.yml" | xargs -I {} ansible-playbook --syntax-check {}
 
@@ -59,7 +59,7 @@ validate:
 	@echo "Collection structure is valid"
 
 # Run tests
-test:
+test: install
 	@echo "Running integration tests..."
 	ansible-playbook tests/integration.yml
 
