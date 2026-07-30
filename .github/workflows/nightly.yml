@@ -191,7 +191,7 @@ jobs:
               PYTHON_BIN=python3
             elif command -v yum >/dev/null; then
               yum update -y
-              yum install -y curl make
+              yum install -y make
               if yum install -y python39 python39-pip; then
                 PYTHON_BIN=python3.9
               else
